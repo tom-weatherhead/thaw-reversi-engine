@@ -9,32 +9,28 @@
 
 class Game {
 	constructor (boardString, maxPly) {
-		this.nBoardWidth = 8;
-		this.nBoardHeight = 8;
-		this.nBoardArea = this.nBoardWidth * this.nBoardHeight;
+		this.boardWidth = 8;
+		this.boardHeight = 8;
+		this.boardArea = this.boardWidth * this.boardHeight;
+		this.initialBestScore = -2 * this.boardArea;
+
+		this.victoryScore = this.boardArea;
+		this.defeatScore = -this.boardArea;
 		this.boardString = boardString;
 		this.maxPly = maxPly;
 
-		// console.log('this.boardString is', this.boardString);
-		// console.log('this.boardString.length is', this.boardString.length);
-		// console.log('this.boardString is', this.boardString);
-
 		if (typeof this.boardString !== 'string') {
 			throw new Error('boardString is not a string.');
-		// } else if (this.boardString.length !== this.boardArea) {
-			// throw new Error('The length of boardString is not ' + this.boardArea + '.');
-		} else if (this.boardString.length !== this.nBoardArea) {
-			throw new Error('The length of boardString is not ' + this.nBoardArea + '.');
+		} else if (this.boardString.length !== this.boardArea) {
+			throw new Error('The length of boardString is not ' + this.boardArea + '.');
 		}
 
 		this.nNumDirections = 8;
 		this.adx = [-1, 0, 1, -1, 1, -1, 0, 1];			// adx.length == nNumDirections
 		this.ady = [-1, -1, -1, 0, 0, 1, 1, 1];			// ady.length == nNumDirections
 
-		// this.aBoardImageNumbers = null;  // new Array(nBoardArea);
-
-		// this.EmptyNumber = -1;
 		this.EmptyNumber = ' ';
+		this.emptySquareToken = ' ';
 
 		this.PiecePopulations = [0, 0];
 		this.players = {
@@ -57,43 +53,43 @@ class Game {
 		this.players.X.opponent = this.players.O;
 		this.players.O.opponent = this.players.X;
 
-		// this.noAutomatedMovePossible = 0;	// Is this correct?
+		// this.noAutomatedMovePossible = 0;
 	}
 
-	getSquareState (row, col) {
+	getSquareState (row, column) {
 
-		if (row < 0 || row >= this.nBoardHeight || col < 0 || col >= this.nBoardWidth) {
-			// TODO? : throw new Error('getSquareState() : Coordinates are off the board.');
-			return this.EmptyNumber;
+		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
+			throw new Error('getSquareState() : Coordinates are off the board.');
+			// return this.EmptyNumber;
 		}
 
-		return this.boardArray[row * this.nBoardWidth + col];
+		return this.boardArray[row * this.boardWidth + column];
 	}
 
-	setSquareState (row, col, imageNumber) {
+	setSquareState (row, column, imageNumber) {
 
-		if (row < 0 || row >= this.nBoardHeight || col < 0 || col >= this.nBoardWidth) {
-			// TODO? : throw new Error('getSquareState() : Coordinates are off the board.');
-			return;
+		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
+			throw new Error('getSquareState() : Coordinates are off the board.');
+			// return;
 		}
 
-		this.boardArray[row * this.nBoardWidth + col] = imageNumber;
+		this.boardArray[row * this.boardWidth + column] = imageNumber;
 	}
 
 	isGameNotOver () {
 		return this.players.X.piecePopulation > 0 &&
 			this.players.O.piecePopulation > 0 &&
-			this.players.X.piecePopulation + this.players.O.piecePopulation < this.nBoardArea;
+			this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea;
 		// && this.noAutomatedMovePossible < 2;
 	}
 
-	squareScore (nRow, nCol) {
+	squareScore (row, column) {		// Calculate a useful heuristic.
 		var cornerSquareScore = 8;
 		var edgeSquareScore = 2;
 		var nScore = 1;
-		var isInEdgeColumn = nCol === 0 || nCol === this.nBoardWidth - 1;
+		var isInEdgeColumn = column === 0 || column === this.boardWidth - 1;
 
-		if (nRow === 0 || nRow === this.nBoardHeight - 1) {
+		if (row === 0 || row === this.boardHeight - 1) {
 
 			if (isInEdgeColumn) {
 				nScore = cornerSquareScore;
@@ -107,13 +103,7 @@ class Game {
 		return nScore;
 	}
 
-	// function PlacePieceData() {
-	//	this.numPiecesFlipped = 0;
-	//	this.score = 0;
-	// }
-
-	placePiece (player, nRow, nCol, undoBuffer) {
-		// var returnObject = new PlacePieceData();
+	placePiece (player, row, column, undoBuffer) {
 		var returnObject = {
 			numPiecesFlipped: 0,
 			score: 0
@@ -121,32 +111,32 @@ class Game {
 		var nUndoSize = 0;
 		var nScore = 0;
 
-		if (nRow < 0 || nRow >= this.nBoardHeight ||
-			nCol < 0 || nCol >= this.nBoardWidth ||
-			this.getSquareState(nRow, nCol) !== this.EmptyNumber) {
-			//alert("(row, col) == (" + nRow + ", " + nCol + ") is invalid.");
-			return returnObject;
+		if (row < 0 || row >= this.boardHeight ||
+			column < 0 || column >= this.boardWidth ||
+			this.getSquareState(row, column) !== this.EmptyNumber) {
+			// throw new Error('placePiece() : Coordinates are off the board.');
+			return returnObject;	// It is necessary to return a value here rather than throwing an exception.
 		}
 
 		for (var i = 0; i < this.nNumDirections; ++i) {
 			var bOwnPieceFound = false;
-			var nRow2 = nRow;
-			var nCol2 = nCol;
+			var row2 = row;
+			var column2 = column;
 			var nSquaresToFlip = 0;
 
 			// Pass 1: Scan and count.
 
 			for (;;) {
-				nRow2 += this.ady[i];
-				nCol2 += this.adx[i];
+				row2 += this.ady[i];
+				column2 += this.adx[i];
 
-				if (nRow2 < 0 || nRow2 >= this.nBoardHeight ||
-					nCol2 < 0 || nCol2 >= this.nBoardWidth ||
-					this.getSquareState(nRow2, nCol2) === this.EmptyNumber) {
+				if (row2 < 0 || row2 >= this.boardHeight ||
+					column2 < 0 || column2 >= this.boardWidth ||
+					this.getSquareState(row2, column2) === this.EmptyNumber) {
 					break;
 				}
 
-				if (this.getSquareState(nRow2, nCol2) === player) {
+				if (this.getSquareState(row2, column2) === player) {
 					bOwnPieceFound = true;
 					break;
 				}
@@ -161,19 +151,19 @@ class Game {
 			}
 
 			// Pass 2: Flip.
-			nRow2 = nRow;
-			nCol2 = nCol;
+			row2 = row;
+			column2 = column;
 
 			for (var j = 0; j < nSquaresToFlip; ++j) {
-				nRow2 += this.ady[i];
-				nCol2 += this.adx[i];
+				row2 += this.ady[i];
+				column2 += this.adx[i];
 
-				this.setSquareState(nRow2, nCol2, player);
-				nScore += 2 * this.squareScore(nRow2, nCol2);
+				this.setSquareState(row2, column2, player);
+				nScore += 2 * this.squareScore(row2, column2);
 
 				if (undoBuffer !== null) {
-					// Add (nRow2, nCol2) to the undo queue.
-					undoBuffer.push(nRow2 * this.nBoardWidth + nCol2);
+					// Add (row2, column2) to the undo queue.
+					undoBuffer.push({ row: row2, column: column2 });
 				}
 
 				nUndoSize++;
@@ -181,9 +171,9 @@ class Game {
 		}
 
 		if (nUndoSize > 0) {
-			this.setSquareState(nRow, nCol, player);
+			this.setSquareState(row, column, player);
 			returnObject.numPiecesFlipped = nUndoSize;
-			returnObject.score = nScore + this.squareScore(nRow, nCol);
+			returnObject.score = nScore + this.squareScore(row, column);
 		}
 		// Else no opposing pieces were flipped, and the move fails.
 
@@ -192,88 +182,81 @@ class Game {
 
 	findBestMove (
 		player, nPly,
-		nParentScore, nBestUncleRecursiveScore) {	// nParentScore, nBestUncleRecursiveScore are for alpha-beta pruning.
+		nParentScore, nBestUncleRecursiveScore) {	// nParentScore and nBestUncleRecursiveScore are for alpha-beta pruning.
 
 		var opponent = this.players[player].opponent.token;
-		var nBestScore = -2 * this.nBoardArea;
-		var bestMoveIndices = [];
+		var nBestScore = this.initialBestScore;
+		var bestMoves = [];
+		var doneSearching = false;
 
-		for (var nSquare = 0; nSquare < this.nBoardArea; ++nSquare) {
-			var undoBuffer = [];
+		for (var row = 0; row < this.boardHeight && !doneSearching; ++row) {
 
-			var nRow = parseInt(nSquare / this.nBoardWidth, 10);
-			var nCol = nSquare % this.nBoardWidth;
-			var placePieceResult = this.placePiece(player, nRow, nCol, undoBuffer);
-			var nUndoSize = placePieceResult.numPiecesFlipped;
+			for (var column = 0; column < this.boardWidth; ++column) {
+				var undoBuffer = [];	// Replace this with the declaration two lines below.
+				var placePieceResult = this.placePiece(player, row, column, undoBuffer);
+				// var undoBuffer = placePieceResult.undoBuffer;
+				var nUndoSize = placePieceResult.numPiecesFlipped;
 
-			//alert("(" + nRow + "," + nCol + "): undo size == " + nUndoSize + "; score == " + placePieceResult.score);
-
-			if (nUndoSize <= 0) {
-				continue;			// eslint-disable-line no-continue
-			}
-
-			//m_nMovesTried++;
-
-			var nScore = placePieceResult.score;
-
-			// this.PiecePopulations[nPlayer] += nUndoSize + 1;
-			// this.PiecePopulations[1 - nPlayer] -= nUndoSize;
-			this.players[player].piecePopulation += nUndoSize + 1;
-			this.players[player].opponent.piecePopulation -= nUndoSize;
-
-			// if (this.PiecePopulations[1 - nPlayer] <= 0) {
-			if (this.players[player].opponent.piecePopulation <= 0) {
-				// The opposing player has been annihilated.
-				nScore = this.nBoardArea; // I.e. victoryScore;
-			} else if (nPly > 1 &&
-				// this.PiecePopulations[0] + this.PiecePopulations[1] < this.nBoardArea) {
-				this.players.X.piecePopulation + this.players.O.piecePopulation < this.nBoardArea) {
-
-				// var childReturnObject = this.bestMove(1 - nPlayer, nPly - 1, nScore, nBestScore);
-				var childReturnObject = this.findBestMove(opponent, nPly - 1, nScore, nBestScore);
-
-				nScore -= childReturnObject.bestScore;
-			}
-
-			this.setSquareState(nRow, nCol, this.EmptyNumber);
-			// this.PiecePopulations[nPlayer] -= nUndoSize + 1;
-			// this.PiecePopulations[1 - nPlayer] += nUndoSize;
-			this.players[player].piecePopulation -= nUndoSize + 1;
-			this.players[player].opponent.piecePopulation += nUndoSize;
-
-			for (var i = 0; i < undoBuffer.length; ++i) {
-				// this.aBoardImageNumbers[undoBuffer[i]] = 1 - nPlayer;
-				this.boardArray[undoBuffer[i]] = opponent;
-			}
-
-			if (nScore > nBestScore) {
-				nBestScore = nScore;
-				bestMoveIndices = [];
-				bestMoveIndices.push(nSquare);
-
-				if (nParentScore - nBestScore < nBestUncleRecursiveScore) {
-					// Alpha-beta pruning.  Because of the initial parameters for the top-level move, this break is never executed for the top-level move.
-					break; // ie. return.
+				if (nUndoSize <= 0) {
+					continue;			// eslint-disable-line no-continue
 				}
-			} else if (nScore === nBestScore) {
-				bestMoveIndices.push(nSquare);
+
+				//m_nMovesTried++;
+
+				var nScore = placePieceResult.score;
+
+				this.players[player].piecePopulation += nUndoSize + 1;
+				this.players[player].opponent.piecePopulation -= nUndoSize;
+
+				if (this.players[player].opponent.piecePopulation <= 0) {
+					// The opposing player has been annihilated.
+					nScore = this.victoryScore;
+				} else if (nPly > 1 &&
+					this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea) {
+
+					var childReturnObject = this.findBestMove(opponent, nPly - 1, nScore, nBestScore);
+
+					nScore -= childReturnObject.bestScore;
+				}
+
+				this.setSquareState(row, column, this.EmptyNumber);
+				this.players[player].piecePopulation -= nUndoSize + 1;
+				this.players[player].opponent.piecePopulation += nUndoSize;
+
+				for (var i = 0; i < undoBuffer.length; ++i) {	// forEach
+					this.boardArray[undoBuffer[i].row * this.boardWidth + undoBuffer[i].column] = opponent;
+				}
+
+				if (nScore > nBestScore) {
+					nBestScore = nScore;
+					bestMoves = [];
+					bestMoves.push({ row: row, column: column });
+
+					if (nParentScore - nBestScore < nBestUncleRecursiveScore) {
+						// *** Here is where the alpha-beta pruning happens ****
+						// Because of the initial parameters for the top-level move, this break is never executed for the top-level move.
+						doneSearching = true;
+						break; // ie. return.
+					}
+				} else if (nScore === nBestScore) {
+					bestMoves.push({ row: row, column: column });
+				}
 			}
 		}
 
-		// var returnObject = new BestMoveData();
 		var returnObject = {
 			bestRow: -1,
-			bestCol: -1,
+			bestColumn: -1,
 			bestScore: 0,
-			bestMoveIndices: bestMoveIndices
+			bestMoves: bestMoves
 		};
 
-		if (bestMoveIndices.length > 0) {
-			var j = parseInt(Math.random() * bestMoveIndices.length, 10);
-			var nBestIndex = bestMoveIndices[j];
+		if (bestMoves.length > 0) {
+			var j = parseInt(Math.random() * bestMoves.length, 10);
+			var selectedBestMove = bestMoves[j];
 
-			returnObject.bestRow = parseInt(nBestIndex / this.nBoardWidth, 10);
-			returnObject.bestCol = nBestIndex % this.nBoardWidth;
+			returnObject.bestRow = selectedBestMove.row;
+			returnObject.bestColumn = selectedBestMove.column;
 		}
 
 		returnObject.bestScore = nBestScore;
@@ -289,8 +272,8 @@ class Game {
 //	this.nPly = nPly;
 // }
 
-// function moveHelper(row, col) {
-//	var placePieceResult = placePiece(NumberOfCurrentPlayer, row, col, null, true);
+// function moveHelper(row, column) {
+//	var placePieceResult = placePiece(NumberOfCurrentPlayer, row, column, null, true);
 //    var nPlacePieceEffect = placePieceResult.numPiecesFlipped;
 //
 //    if (nPlacePieceEffect > 0) {
@@ -316,11 +299,13 @@ function createInitialBoard () {
 	return '                           XO      OX                           ';
 }
 
+// TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
+
 function findBestMove (boardString, player, maxPly) {
 	let game = new Game(boardString, maxPly);
 
 	// The third parameter helps to initialize the alpha-beta pruning.
-	return game.findBestMove(player, game.maxPly, 0, -2 * game.nBoardArea);
+	return game.findBestMove(player, game.maxPly, 0, game.initialBestScore);
 }
 
 module.exports = {
