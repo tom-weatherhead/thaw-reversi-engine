@@ -2,7 +2,7 @@
   "name": "thaw-reversi-engine",
   "version": "0.0.0",
   "description": "A Node.js Reversi (Othello) game engine with alpha-beta pruning, packaged for npm.",
-  "main": "index.js",
+  "main": "src/engine.js",
   "homepage": "https://github.com/tom-weatherhead/thaw-reversi-engine#readme",
   "repository": {
     "type": "git",
