@@ -16,7 +16,6 @@
     "mocha": "grunt mochaTest",
     "nsp": "grunt nsp",
     "smoke": "node test/smoke_test.js",
-    "start": "node index.js",
     "test": "grunt test",
     "watch": "grunt watch"
   },

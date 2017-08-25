@@ -4,50 +4,50 @@
 
 'use strict';
 
-// const victoryScore = 100;
-// const defeatScore = -victoryScore;
-
 class Game {
-	constructor (boardString, maxPly) {
+	constructor (boardString) {
 		this.boardWidth = 8;
 		this.boardHeight = 8;
 		this.boardArea = this.boardWidth * this.boardHeight;
 		this.initialBestScore = -2 * this.boardArea;
 
 		this.victoryScore = this.boardArea;
-		this.defeatScore = -this.boardArea;
-		this.boardString = boardString;
-		this.maxPly = maxPly;
+		// this.defeatScore = -this.boardArea;
 
-		if (typeof this.boardString !== 'string') {
+		if (typeof boardString !== 'string') {
 			throw new Error('boardString is not a string.');
-		} else if (this.boardString.length !== this.boardArea) {
+		} else if (boardString.length !== this.boardArea) {
 			throw new Error('The length of boardString is not ' + this.boardArea + '.');
 		}
 
-		this.nNumDirections = 8;
-		this.adx = [-1, 0, 1, -1, 1, -1, 0, 1];			// adx.length == nNumDirections
-		this.ady = [-1, -1, -1, 0, 0, 1, 1, 1];			// ady.length == nNumDirections
+		this.directions = [
+			{ dx: -1, dy: -1 },
+			{ dx:  0, dy: -1 },			// eslint-disable-line key-spacing
+			{ dx:  1, dy: -1 },			// eslint-disable-line key-spacing
+			{ dx: -1, dy:  0 },			// eslint-disable-line key-spacing
+			{ dx:  1, dy:  0 },			// eslint-disable-line key-spacing
+			{ dx: -1, dy:  1 },			// eslint-disable-line key-spacing
+			{ dx:  0, dy:  1 },			// eslint-disable-line key-spacing
+			{ dx:  1, dy:  1 }			// eslint-disable-line key-spacing
+		];
 
-		this.EmptyNumber = ' ';
 		this.emptySquareToken = ' ';
 
-		this.PiecePopulations = [0, 0];
 		this.players = {
 			X: {
-				piecePopulation: (this.boardString.match(/X/g) || []).length,
+				piecePopulation: (boardString.match(/X/g) || []).length,
 				token: 'X'
 			},
 			O: {
-				piecePopulation: (this.boardString.match(/O/g) || []).length,
+				piecePopulation: (boardString.match(/O/g) || []).length,
 				token: 'O'
 			},
 			' ': {
-				piecePopulation: (this.boardString.match(/ /g) || []).length
+				piecePopulation: (boardString.match(/ /g) || []).length
 			}
 		};
 
-		this.boardArray = this.boardString.split('');
+		this.boardArray = boardString.split('');
 
 		// Note: the following lines construct a circular data structure.
 		this.players.X.opponent = this.players.O;
@@ -60,7 +60,6 @@ class Game {
 
 		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
 			throw new Error('getSquareState() : Coordinates are off the board.');
-			// return this.EmptyNumber;
 		}
 
 		return this.boardArray[row * this.boardWidth + column];
@@ -70,7 +69,6 @@ class Game {
 
 		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
 			throw new Error('getSquareState() : Coordinates are off the board.');
-			// return;
 		}
 
 		this.boardArray[row * this.boardWidth + column] = imageNumber;
@@ -113,12 +111,12 @@ class Game {
 
 		if (row < 0 || row >= this.boardHeight ||
 			column < 0 || column >= this.boardWidth ||
-			this.getSquareState(row, column) !== this.EmptyNumber) {
+			this.getSquareState(row, column) !== this.emptySquareToken) {
 			// throw new Error('placePiece() : Coordinates are off the board.');
 			return returnObject;	// It is necessary to return a value here rather than throwing an exception.
 		}
 
-		for (var i = 0; i < this.nNumDirections; ++i) {
+		this.directions.forEach(direction => {
 			var bOwnPieceFound = false;
 			var row2 = row;
 			var column2 = column;
@@ -127,12 +125,12 @@ class Game {
 			// Pass 1: Scan and count.
 
 			for (;;) {
-				row2 += this.ady[i];
-				column2 += this.adx[i];
+				row2 += direction.dy;
+				column2 += direction.dx;
 
 				if (row2 < 0 || row2 >= this.boardHeight ||
 					column2 < 0 || column2 >= this.boardWidth ||
-					this.getSquareState(row2, column2) === this.EmptyNumber) {
+					this.getSquareState(row2, column2) === this.emptySquareToken) {
 					break;
 				}
 
@@ -145,9 +143,7 @@ class Game {
 			}
 
 			if (!bOwnPieceFound) {
-				// Is the "continue" keyword "bad" in JavaScript?
-				// See e.g. https://stackoverflow.com/questions/11728757/why-are-continue-statements-bad-in-javascript
-				continue;			// eslint-disable-line no-continue
+				return;
 			}
 
 			// Pass 2: Flip.
@@ -155,8 +151,8 @@ class Game {
 			column2 = column;
 
 			for (var j = 0; j < nSquaresToFlip; ++j) {
-				row2 += this.ady[i];
-				column2 += this.adx[i];
+				row2 += direction.dy;
+				column2 += direction.dx;
 
 				this.setSquareState(row2, column2, player);
 				nScore += 2 * this.squareScore(row2, column2);
@@ -168,7 +164,7 @@ class Game {
 
 				nUndoSize++;
 			}
-		}
+		});
 
 		if (nUndoSize > 0) {
 			this.setSquareState(row, column, player);
@@ -198,10 +194,10 @@ class Game {
 				var nUndoSize = placePieceResult.numPiecesFlipped;
 
 				if (nUndoSize <= 0) {
+					// Is the "continue" keyword "bad" in JavaScript?
+					// See e.g. https://stackoverflow.com/questions/11728757/why-are-continue-statements-bad-in-javascript
 					continue;			// eslint-disable-line no-continue
 				}
-
-				//m_nMovesTried++;
 
 				var nScore = placePieceResult.score;
 
@@ -219,13 +215,13 @@ class Game {
 					nScore -= childReturnObject.bestScore;
 				}
 
-				this.setSquareState(row, column, this.EmptyNumber);
+				this.setSquareState(row, column, this.emptySquareToken);
 				this.players[player].piecePopulation -= nUndoSize + 1;
 				this.players[player].opponent.piecePopulation += nUndoSize;
 
-				for (var i = 0; i < undoBuffer.length; ++i) {	// forEach
-					this.boardArray[undoBuffer[i].row * this.boardWidth + undoBuffer[i].column] = opponent;
-				}
+				undoBuffer.forEach(squareCoordinates => {
+					this.boardArray[squareCoordinates.row * this.boardWidth + squareCoordinates.column] = opponent;
+				});
 
 				if (nScore > nBestScore) {
 					nBestScore = nScore;
@@ -247,8 +243,15 @@ class Game {
 		var returnObject = {
 			bestRow: -1,
 			bestColumn: -1,
-			bestScore: 0,
-			bestMoves: bestMoves
+			bestScore: nBestScore,
+			bestMoves: bestMoves.sort(function (move1, move2) {
+
+				if (move1.row !== move2.row) {
+					return move1.row - move2.row;
+				} else {
+					return move1.column - move2.column;
+				}
+			})
 		};
 
 		if (bestMoves.length > 0) {
@@ -258,8 +261,6 @@ class Game {
 			returnObject.bestRow = selectedBestMove.row;
 			returnObject.bestColumn = selectedBestMove.column;
 		}
-
-		returnObject.bestScore = nBestScore;
 
 		return returnObject;
 	}
@@ -302,15 +303,13 @@ function createInitialBoard () {
 // TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
 
 function findBestMove (boardString, player, maxPly) {
-	let game = new Game(boardString, maxPly);
+	let game = new Game(boardString);
 
 	// The third parameter helps to initialize the alpha-beta pruning.
-	return game.findBestMove(player, game.maxPly, 0, game.initialBestScore);
+	return game.findBestMove(player, maxPly, 0, game.initialBestScore);
 }
 
 module.exports = {
-	// victoryScore: victoryScore,
-	// defeatScore: defeatScore,
 	createInitialBoard: createInitialBoard,
 	findBestMove: findBestMove
 };
