@@ -13,22 +13,28 @@ class Game {
 		this.nBoardHeight = 8;
 		this.nBoardArea = this.nBoardWidth * this.nBoardHeight;
 		this.boardString = boardString;
-		console.log('this.boardString is', this.boardString);
+		this.maxPly = maxPly;
+
+		// console.log('this.boardString is', this.boardString);
+		// console.log('this.boardString.length is', this.boardString.length);
+		// console.log('this.boardString is', this.boardString);
 
 		if (typeof this.boardString !== 'string') {
 			throw new Error('boardString is not a string.');
 		// } else if (this.boardString.length !== this.boardArea) {
 			// throw new Error('The length of boardString is not ' + this.boardArea + '.');
+		} else if (this.boardString.length !== this.nBoardArea) {
+			throw new Error('The length of boardString is not ' + this.nBoardArea + '.');
 		}
 
 		this.nNumDirections = 8;
-		this.adx = [-1, 0, 1, -1, 1, -1, 0, 1];          // adx.length == nNumDirections
-		this.ady = [-1, -1, -1, 0, 0, 1, 1, 1];          // ady.length == nNumDirections
+		this.adx = [-1, 0, 1, -1, 1, -1, 0, 1];			// adx.length == nNumDirections
+		this.ady = [-1, -1, -1, 0, 0, 1, 1, 1];			// ady.length == nNumDirections
 
 		// this.aBoardImageNumbers = null;  // new Array(nBoardArea);
 
 		// this.EmptyNumber = -1;
-		this.EmptyNumber =  ' ';
+		this.EmptyNumber = ' ';
 
 		this.PiecePopulations = [0, 0];
 		this.players = {
@@ -48,13 +54,13 @@ class Game {
 		this.boardArray = this.boardString.split('');
 
 		// Note: the following lines construct a circular data structure.
-		this.players['X'].opponent = this.players['O'];
-		this.players['O'].opponent = this.players['X'];
-		
-		this.noAutomatedMovePossible = 0;	// Is this correct?
+		this.players.X.opponent = this.players.O;
+		this.players.O.opponent = this.players.X;
+
+		// this.noAutomatedMovePossible = 0;	// Is this correct?
 	}
 
-	getSquareState(row, col) {
+	getSquareState (row, col) {
 
 		if (row < 0 || row >= this.nBoardHeight || col < 0 || col >= this.nBoardWidth) {
 			// TODO? : throw new Error('getSquareState() : Coordinates are off the board.');
@@ -64,7 +70,7 @@ class Game {
 		return this.boardArray[row * this.nBoardWidth + col];
 	}
 
-	setSquareState(row, col, imageNumber) {
+	setSquareState (row, col, imageNumber) {
 
 		if (row < 0 || row >= this.nBoardHeight || col < 0 || col >= this.nBoardWidth) {
 			// TODO? : throw new Error('getSquareState() : Coordinates are off the board.');
@@ -74,24 +80,20 @@ class Game {
 		this.boardArray[row * this.nBoardWidth + col] = imageNumber;
 	}
 
-	isGameNotOver() {
-		// return this.PiecePopulations[0] > 0 &&
-			// this.PiecePopulations[1] > 0 &&
-			// this.PiecePopulations[0] + this.PiecePopulations[1] < this.nBoardArea &&
-			// this.noAutomatedMovePossible < 2;
-		return this.players['X'].piecePopulation > 0 &&
-			this.players['O'].piecePopulation > 0 &&
-			this.players['X'].piecePopulation + this.players['O'].piecePopulation < this.nBoardArea &&
-			this.noAutomatedMovePossible < 2;
+	isGameNotOver () {
+		return this.players.X.piecePopulation > 0 &&
+			this.players.O.piecePopulation > 0 &&
+			this.players.X.piecePopulation + this.players.O.piecePopulation < this.nBoardArea;
+		// && this.noAutomatedMovePossible < 2;
 	}
 
-	squareScore(nRow, nCol) {
+	squareScore (nRow, nCol) {
 		var cornerSquareScore = 8;
 		var edgeSquareScore = 2;
 		var nScore = 1;
-		var isInEdgeColumn = nCol == 0 || nCol == this.nBoardWidth - 1;
+		var isInEdgeColumn = nCol === 0 || nCol === this.nBoardWidth - 1;
 
-		if (nRow == 0 || nRow == this.nBoardHeight - 1) {
+		if (nRow === 0 || nRow === this.nBoardHeight - 1) {
 
 			if (isInEdgeColumn) {
 				nScore = cornerSquareScore;
@@ -106,11 +108,11 @@ class Game {
 	}
 
 	// function PlacePieceData() {
-		// this.numPiecesFlipped = 0;
-		// this.score = 0;
+	//	this.numPiecesFlipped = 0;
+	//	this.score = 0;
 	// }
 
-	placePiece(player, nRow, nCol, undoBuffer) {
+	placePiece (player, nRow, nCol, undoBuffer) {
 		// var returnObject = new PlacePieceData();
 		var returnObject = {
 			numPiecesFlipped: 0,
@@ -121,7 +123,7 @@ class Game {
 
 		if (nRow < 0 || nRow >= this.nBoardHeight ||
 			nCol < 0 || nCol >= this.nBoardWidth ||
-			this.getSquareState(nRow, nCol) != this.EmptyNumber) {
+			this.getSquareState(nRow, nCol) !== this.EmptyNumber) {
 			//alert("(row, col) == (" + nRow + ", " + nCol + ") is invalid.");
 			return returnObject;
 		}
@@ -134,17 +136,17 @@ class Game {
 
 			// Pass 1: Scan and count.
 
-			for (; ; ) {
+			for (;;) {
 				nRow2 += this.ady[i];
 				nCol2 += this.adx[i];
 
 				if (nRow2 < 0 || nRow2 >= this.nBoardHeight ||
 					nCol2 < 0 || nCol2 >= this.nBoardWidth ||
-					this.getSquareState(nRow2, nCol2) == this.EmptyNumber) {
+					this.getSquareState(nRow2, nCol2) === this.EmptyNumber) {
 					break;
 				}
 
-				if (this.getSquareState(nRow2, nCol2) == player) {
+				if (this.getSquareState(nRow2, nCol2) === player) {
 					bOwnPieceFound = true;
 					break;
 				}
@@ -153,7 +155,9 @@ class Game {
 			}
 
 			if (!bOwnPieceFound) {
-				continue;
+				// Is the "continue" keyword "bad" in JavaScript?
+				// See e.g. https://stackoverflow.com/questions/11728757/why-are-continue-statements-bad-in-javascript
+				continue;			// eslint-disable-line no-continue
 			}
 
 			// Pass 2: Flip.
@@ -167,7 +171,7 @@ class Game {
 				this.setSquareState(nRow2, nCol2, player);
 				nScore += 2 * this.squareScore(nRow2, nCol2);
 
-				if (undoBuffer != null) {
+				if (undoBuffer !== null) {
 					// Add (nRow2, nCol2) to the undo queue.
 					undoBuffer.push(nRow2 * this.nBoardWidth + nCol2);
 				}
@@ -186,16 +190,9 @@ class Game {
 		return returnObject;
 	}
 
-	// function BestMoveData() {
-		// this.bestRow = -1;
-		// this.bestCol = -1;
-		// this.bestScore = 0;
-	// }
-
-	findBestMove(
+	findBestMove (
 		player, nPly,
-		nParentScore, nBestUncleRecursiveScore	// For alpha-beta pruning.
-		) {
+		nParentScore, nBestUncleRecursiveScore) {	// nParentScore, nBestUncleRecursiveScore are for alpha-beta pruning.
 
 		var opponent = this.players[player].opponent.token;
 		var nBestScore = -2 * this.nBoardArea;
@@ -212,7 +209,7 @@ class Game {
 			//alert("(" + nRow + "," + nCol + "): undo size == " + nUndoSize + "; score == " + placePieceResult.score);
 
 			if (nUndoSize <= 0) {
-				continue;
+				continue;			// eslint-disable-line no-continue
 			}
 
 			//m_nMovesTried++;
@@ -230,7 +227,7 @@ class Game {
 				nScore = this.nBoardArea; // I.e. victoryScore;
 			} else if (nPly > 1 &&
 				// this.PiecePopulations[0] + this.PiecePopulations[1] < this.nBoardArea) {
-				this.players['X'].piecePopulation + this.players['O'].piecePopulation < this.nBoardArea) {
+				this.players.X.piecePopulation + this.players.O.piecePopulation < this.nBoardArea) {
 
 				// var childReturnObject = this.bestMove(1 - nPlayer, nPly - 1, nScore, nBestScore);
 				var childReturnObject = this.findBestMove(opponent, nPly - 1, nScore, nBestScore);
@@ -258,7 +255,7 @@ class Game {
 					// Alpha-beta pruning.  Because of the initial parameters for the top-level move, this break is never executed for the top-level move.
 					break; // ie. return.
 				}
-			} else if (nScore == nBestScore) {
+			} else if (nScore === nBestScore) {
 				bestMoveIndices.push(nSquare);
 			}
 		}
@@ -267,40 +264,55 @@ class Game {
 		var returnObject = {
 			bestRow: -1,
 			bestCol: -1,
-			bestScore: 0
+			bestScore: 0,
+			bestMoveIndices: bestMoveIndices
 		};
 
 		if (bestMoveIndices.length > 0) {
-			var i = parseInt(Math.random() * bestMoveIndices.length, 10);
-			var nBestIndex = bestMoveIndices[i];
+			var j = parseInt(Math.random() * bestMoveIndices.length, 10);
+			var nBestIndex = bestMoveIndices[j];
 
 			returnObject.bestRow = parseInt(nBestIndex / this.nBoardWidth, 10);
 			returnObject.bestCol = nBestIndex % this.nBoardWidth;
 		}
 
 		returnObject.bestScore = nBestScore;
+
 		return returnObject;
 	}
 }
 
 // function WorkerParameters(nPlayer, nPly) {
-    // this.aBoardImageNumbers = aBoardImageNumbers;
-    // this.PiecePopulations = PiecePopulations;
-    // this.nPlayer = nPlayer;
-    // this.nPly = nPly;
+//	this.aBoardImageNumbers = aBoardImageNumbers;
+//	this.PiecePopulations = PiecePopulations;
+//	this.nPlayer = nPlayer;
+//	this.nPly = nPly;
 // }
 
-function createInitialBoard() {
-	// const emptyRow = '        ';
-	// return
-		// emptyRow + 					// Row 0
-		// emptyRow + 					// Row 1
-		// emptyRow + 					// Row 2
-		// '   XO   ' +				// Row 3
-		// '   OX   ' +				// Row 4
-		// emptyRow + 					// Row 5
-		// emptyRow + 					// Row 6
-		// emptyRow; 					// Row 7
+// function moveHelper(row, col) {
+//	var placePieceResult = placePiece(NumberOfCurrentPlayer, row, col, null, true);
+//    var nPlacePieceEffect = placePieceResult.numPiecesFlipped;
+//
+//    if (nPlacePieceEffect > 0) {
+//        PiecePopulations[NumberOfCurrentPlayer] += nPlacePieceEffect + 1;
+//        PiecePopulations[1 - NumberOfCurrentPlayer] -= nPlacePieceEffect;
+//    }
+//
+//    if (nPlacePieceEffect == 0 && PlayerIsAutomated[NumberOfCurrentPlayer]) {
+//        ++noAutomatedMovePossible;
+//    } else {
+//        noAutomatedMovePossible = 0;
+//    }
+//
+//    NumberOfCurrentPlayer = 1 - NumberOfCurrentPlayer;
+//    displayTurnMessage();
+//
+//    if (isGameNotOver() && PlayerIsAutomated[NumberOfCurrentPlayer]) {
+//        setTimeout("automatedMove()", 100);     // Wait for 100 ms before the next move to give the browser time to update the board.
+//    }
+// }
+
+function createInitialBoard () {
 	return '                           XO      OX                           ';
 }
 
