@@ -1,4 +1,7 @@
 # thaw-reversi-engine
+
+[![build status](https://secure.travis-ci.org/tom-weatherhead/thaw-reversi-engine.svg)](http://travis-ci.org/tom-weatherhead/thaw-reversi-engine)  [![downloads](https://img.shields.io/npm/dt/thaw-reversi-engine.svg)](https://www.npmjs.com/package/thaw-reversi-engine)
+
 A Node.js Reversi (Othello) game engine with alpha-beta pruning and a heuristic, packaged for npm.
 
 Git installation instructions:

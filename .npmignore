@@ -2,4 +2,5 @@
 /test/
 .idea
 .eslintrc
+.travis.yml
 Gruntfile.js
