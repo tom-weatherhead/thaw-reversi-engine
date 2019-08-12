@@ -308,6 +308,12 @@ function findBestMove (boardString, player, maxPly) {
 }
 
 module.exports = {
+	// minMaxPly: minMaxPly,
+	// maxMaxPly: maxMaxPly,
+	// victoryScore: victoryScore,
+	// defeatScore: defeatScore,
+	// errorMessages: errorMessages,
+	// testDescriptors: testDescriptors,
 	createInitialBoard: createInitialBoard,
 	findBestMove: findBestMove
 };
