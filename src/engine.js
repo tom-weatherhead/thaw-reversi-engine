@@ -1,7 +1,5 @@
 // thaw-reversi-engine/src/engine.js
 
-// npm install --save-dev babel-cli babel-preset-env chai grunt grunt-cli grunt-contrib-watch grunt-eslint grunt-mocha-test grunt-nsp mocha
-
 'use strict';
 
 class Game {

@@ -1,52 +1,40 @@
 {
-  "name": "thaw-reversi-engine",
-  "version": "0.1.0",
-  "description": "A Node.js Reversi (Othello) game engine with alpha-beta pruning, packaged for npm.",
-  "main": "src/engine.js",
-  "homepage": "https://github.com/tom-weatherhead/thaw-reversi-engine#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tom-weatherhead/thaw-reversi-engine.git"
-  },
-  "bugs": {
-    "url": "https://github.com/tom-weatherhead/thaw-reversi-engine/issues"
-  },
-  "scripts": {
-    "lint": "grunt eslint",
-    "mocha": "grunt mochaTest",
-    "nsp": "grunt nsp",
-    "smoke": "node test/smoke_test.js",
-    "test": "grunt test",
-    "watch": "grunt watch"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.0",
-    "chai": "^4.1.1",
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-eslint": "^20.0.0",
-    "grunt-mocha-test": "^0.13.2",
-    "grunt-nsp": "^2.3.1",
-    "mocha": "^3.5.0"
-  },
-  "engineStrict": true,
-  "engines": {
-    "node": ">=8.0.0"
-  },
-  "keywords": [
-    "eslint",
-    "grunt",
-    "mocha",
-    "node",
-    "nsp",
-    "othello",
-    "reversi"
-  ],
-  "license": "MIT",
-  "author": {
-    "name": "Tom Weatherhead",
-    "url": "https://github.com/tom-weatherhead"
-  }
+	"name": "thaw-reversi-engine",
+	"version": "0.1.1",
+	"description": "A Node.js Reversi (Othello) game engine with alpha-beta pruning and a heuristic, packaged for npm.",
+	"main": "src/engine.js",
+	"homepage": "https://github.com/tom-weatherhead/thaw-reversi-engine#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/tom-weatherhead/thaw-reversi-engine.git"
+	},
+	"bugs": {
+		"url": "https://github.com/tom-weatherhead/thaw-reversi-engine/issues"
+	},
+	"scripts": {
+		"build": "npm i && grunt",
+		"clean": "rm -rf node_modules && rm -f package-lock.json",
+		"lint": "grunt eslint",
+		"mocha": "grunt mochaTest",
+		"smoke": "node test/smoke_test.js",
+		"test": "grunt test"
+	},
+	"devDependencies": {
+		"babel-mixin": "^0.0.4",
+		"chai": "^4.2.0"
+	},
+	"engineStrict": true,
+	"engines": {
+		"node": ">= 8"
+	},
+	"keywords": [
+		"eslint",
+		"grunt",
+		"mocha",
+		"node",
+		"othello",
+		"reversi"
+	],
+	"author": "Tom Weatherhead <null@2hrd4u.org> (https://httpbin.org/status/418)",
+	"license": "MIT"
 }

@@ -1,3 +1,13 @@
+// tom-weatherhead/thaw-reversi-engine/Gruntfile.js
+
+'use strict';
+
+module.exports = require('thaw-config').grunt({
+	eslint: true,
+	mocha: true
+});
+
+/*
 module.exports = function (grunt) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -49,3 +59,4 @@ module.exports = function (grunt) {
 	grunt.registerTask('test', ['eslint', 'mochaTest', 'nsp']);
 	grunt.registerTask('default', ['test']);
 };
+ */
