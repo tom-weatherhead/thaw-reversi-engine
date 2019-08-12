@@ -43,6 +43,7 @@ try {
 	console.error('engine.findBestMove() threw an exception:', error);
 }
 ```
+
 Output: E.g.
 
 ```js
