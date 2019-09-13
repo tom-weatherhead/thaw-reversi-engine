@@ -45,13 +45,21 @@ class Game {
 			}
 		};
 
-		this.boardArray = boardString.split('');
+		// Split a string into an array of characters:
+		// see https://stackoverflow.com/questions/4547609/how-do-you-get-a-string-to-a-character-array-in-javascript/34717402#34717402
+		// this.boardArray = boardString.split('');
+		this.boardArray = [...boardString];
+		// this.boardArray = Array.from(boardString);
 
 		// Note: the following lines construct a circular data structure.
 		this.players.X.opponent = this.players.O;
 		this.players.O.opponent = this.players.X;
 
 		// this.noAutomatedMovePossible = 0;
+	}
+
+	getBoardAsString () {
+		return this.boardArray.join('');
 	}
 
 	getSquareState (row, column) {
@@ -155,7 +163,7 @@ class Game {
 				this.setSquareState(row2, column2, player);
 				nScore += 2 * this.squareScore(row2, column2);
 
-				if (undoBuffer !== null) {
+				if (undoBuffer) {
 					// Add (row2, column2) to the undo queue.
 					undoBuffer.push({ row: row2, column: column2 });
 				}
@@ -301,11 +309,54 @@ function createInitialBoard () {
 // TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
 
 function findBestMove (boardString, player, maxPly) {
-	let game = new Game(boardString);
+	let game = new Game(boardString); // Use a temporary game object?
 
 	// The third parameter helps to initialize the alpha-beta pruning.
 	return game.findBestMove(player, maxPly, 0, game.initialBestScore);
 }
+
+// BEGIN Version 0.2.0 API
+
+function getInitialState () {
+	const boardAsString = createInitialBoard();
+	let game = new Game(boardAsString);
+
+	return {
+		game: game,
+		boardAsString: boardAsString,
+		populations: {
+			X: game.players.X.piecePopulation,
+			O: game.players.O.piecePopulation
+		},
+		player: 'X',
+		isGameOver: false
+	};
+}
+
+function moveManually (gameState, row, column) {
+	gameState.game.placePiece(gameState.player, row, column);
+
+	return {
+		game: gameState.game,
+		boardAsString: gameState.game.getBoardAsString(),
+		populations: {
+			X: gameState.game.players.X.piecePopulation,
+			O: gameState.game.players.O.piecePopulation
+		},
+		player: gameState.player === 'X' ? 'O' : 'X',
+		isGameOver: !gameState.game.isGameNotOver()
+	};
+}
+
+function moveAutomatically (gameState, maxPly) {
+	const result = findBestMove(gameState.boardAsString, gameState.player, maxPly);
+
+	result.gameState = moveManually(gameState, result.bestRow, result.bestColumn);
+
+	return result;
+}
+
+// END Version 0.2.0 API
 
 module.exports = {
 	// minMaxPly: minMaxPly,
@@ -314,8 +365,15 @@ module.exports = {
 	// defeatScore: defeatScore,
 	// errorMessages: errorMessages,
 	// testDescriptors: testDescriptors,
+
+	// Pre-0.2.0 API:
 	createInitialBoard: createInitialBoard,
-	findBestMove: findBestMove
+	findBestMove: findBestMove,
+
+	// Version 0.2.0 API:
+	getInitialState: getInitialState,
+	moveManually: moveManually,
+	moveAutomatically: moveAutomatically
 };
 
 // **** End of File ****
