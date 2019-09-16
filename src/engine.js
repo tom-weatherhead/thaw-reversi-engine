@@ -2,34 +2,45 @@
 
 'use strict';
 
+const boardWidth = 8;
+const boardHeight = 8;
+
+const eightDirections = [
+	{ dx: -1, dy: -1 },
+	{ dx:  0, dy: -1 },			// eslint-disable-line key-spacing
+	{ dx:  1, dy: -1 },			// eslint-disable-line key-spacing
+	{ dx: -1, dy:  0 },			// eslint-disable-line key-spacing
+	{ dx:  1, dy:  0 },			// eslint-disable-line key-spacing
+	{ dx: -1, dy:  1 },			// eslint-disable-line key-spacing
+	{ dx:  0, dy:  1 },			// eslint-disable-line key-spacing
+	{ dx:  1, dy:  1 }			// eslint-disable-line key-spacing
+];
+
+const emptySquareToken = ' ';
+
 class Game {
 	constructor (boardString) {
-		this.boardWidth = 8;
-		this.boardHeight = 8;
+		this.boardWidth = boardWidth;
+		this.boardHeight = boardHeight;
 		this.boardArea = this.boardWidth * this.boardHeight;
 		this.initialBestScore = -2 * this.boardArea;
 
 		this.victoryScore = this.boardArea;
 		// this.defeatScore = -this.boardArea;
 
+		if (!boardString) {
+			boardString = Game.initialBoardAsString;
+		}
+
 		if (typeof boardString !== 'string') {
 			throw new Error('boardString is not a string.');
 		} else if (boardString.length !== this.boardArea) {
-			throw new Error('The length of boardString is not ' + this.boardArea + '.');
+			throw new Error(`The length of boardString is not ${this.boardArea}.`);
 		}
 
-		this.directions = [
-			{ dx: -1, dy: -1 },
-			{ dx:  0, dy: -1 },			// eslint-disable-line key-spacing
-			{ dx:  1, dy: -1 },			// eslint-disable-line key-spacing
-			{ dx: -1, dy:  0 },			// eslint-disable-line key-spacing
-			{ dx:  1, dy:  0 },			// eslint-disable-line key-spacing
-			{ dx: -1, dy:  1 },			// eslint-disable-line key-spacing
-			{ dx:  0, dy:  1 },			// eslint-disable-line key-spacing
-			{ dx:  1, dy:  1 }			// eslint-disable-line key-spacing
-		];
+		this.directions = eightDirections;
 
-		this.emptySquareToken = ' ';
+		this.emptySquareToken = emptySquareToken;
 
 		this.players = {
 			X: {
@@ -62,10 +73,16 @@ class Game {
 		return this.boardArray.join('');
 	}
 
+	getOpponentToken (playerToken) {
+		return playerToken === 'X' ? 'O' : 'X';
+	}
+
 	getSquareState (row, column) {
 
 		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
-			throw new Error('getSquareState() : Coordinates are off the board.');
+			// throw new Error('getSquareState() : Coordinates are off the board.');
+
+			return null;
 		}
 
 		return this.boardArray[row * this.boardWidth + column];
@@ -107,6 +124,7 @@ class Game {
 		return nScore;
 	}
 
+	/*
 	placePiece (player, row, column, undoBuffer) {
 		var returnObject = {
 			numPiecesFlipped: 0,
@@ -181,12 +199,92 @@ class Game {
 
 		return returnObject;
 	}
+	 */
+
+	placePiece (player, row, column) {
+		let returnObject = {
+			score: 0,
+			flippedPieces: []
+		};
+		// const opponentToken = this.getOpponentToken(player);
+
+		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth ||
+			this.getSquareState(row, column) !== this.emptySquareToken) {
+
+			return returnObject;
+		}
+
+		this.directions.forEach(direction => {
+			// Pass 1: Scan.
+
+			let canFlipInThisDirection = null;
+			let undoBuffer = [];
+			/*
+			let squareState = this.getSquareState(row + direction.dy, column + direction.dx);
+
+			for (let row2 = row + direction.dy, column2 = column + direction.dx;
+				canFlipInThisDirection === null && row2 >= 0 && row2 < this.boardHeight && column2 >= 0 && column2 < this.boardWidth; // && squareState === opponentToken;
+				row2 += direction.dy, column2 += direction.dx) {
+
+				if (squareState === player) {
+					canFlipInThisDirection = true;
+				} else if (squareState === this.emptySquareToken) {
+					canFlipInThisDirection = false;
+				} else { // squareState === opponentToken
+					undoBuffer.push({ row: row2, column: column2 });
+				}
+
+				squareState = this.getSquareState(row + direction.dy, column + direction.dx);
+			}
+			 */
+			let row2 = row;
+			let column2 = column;
+
+			while (canFlipInThisDirection === null && row2 >= 0 && row2 < this.boardHeight && column2 >= 0 && column2 < this.boardWidth) {
+				row2 += direction.dy;
+				column2 += direction.dx;
+
+				const squareState = this.getSquareState(row2, column2);
+
+				if (squareState === player) {
+					canFlipInThisDirection = true;
+				} else if (squareState === this.emptySquareToken) {
+					canFlipInThisDirection = false;
+				} else { // squareState === opponentToken
+					undoBuffer.push({ row: row2, column: column2 });
+				}
+			}
+
+			if (canFlipInThisDirection) {
+				// console.log('undoBuffer is', undoBuffer);
+				returnObject.flippedPieces = returnObject.flippedPieces.concat(undoBuffer);
+			}
+		});
+
+		// console.log('returnObject.flippedPieces is', returnObject.flippedPieces);
+
+		if (returnObject.flippedPieces.length) {
+			// Pass 2: Flip.
+
+			returnObject.flippedPieces.forEach(coord => {
+				this.setSquareState(coord.row, coord.column, player);
+				returnObject.score += 2 * this.squareScore(coord.row, coord.column);
+			});
+
+			this.setSquareState(row, column, player);
+			returnObject.numPiecesFlipped = returnObject.flippedPieces.length;
+			returnObject.score += this.squareScore(row, column);
+		}
+		// Else no opposing pieces were flipped, and the move fails.
+
+		return returnObject;
+	}
 
 	findBestMove (
 		player, nPly,
 		nParentScore, nBestUncleRecursiveScore) {	// nParentScore and nBestUncleRecursiveScore are for alpha-beta pruning.
 
-		var opponent = this.players[player].opponent.token;
+		const opponent = this.players[player].opponent.token;
 		var nBestScore = this.initialBestScore;
 		var bestMoves = [];
 		var doneSearching = false;
@@ -194,12 +292,13 @@ class Game {
 		for (var row = 0; row < this.boardHeight && !doneSearching; ++row) {
 
 			for (var column = 0; column < this.boardWidth; ++column) {
-				var undoBuffer = [];	// Replace this with the declaration two lines below.
-				var placePieceResult = this.placePiece(player, row, column, undoBuffer);
+				// var undoBuffer = [];	// Replace this with the declaration two lines below.
+				const placePieceResult = this.placePiece(player, row, column);
 				// var undoBuffer = placePieceResult.undoBuffer;
-				var nUndoSize = placePieceResult.numPiecesFlipped;
+				// var nUndoSize = placePieceResult.numPiecesFlipped;
+				const numPiecesFlipped = placePieceResult.flippedPieces.length;
 
-				if (nUndoSize <= 0) {
+				if (!numPiecesFlipped) {
 					// Is the "continue" keyword "bad" in JavaScript?
 					// See e.g. https://stackoverflow.com/questions/11728757/why-are-continue-statements-bad-in-javascript
 					continue;			// eslint-disable-line no-continue
@@ -207,8 +306,8 @@ class Game {
 
 				var nScore = placePieceResult.score;
 
-				this.players[player].piecePopulation += nUndoSize + 1;
-				this.players[player].opponent.piecePopulation -= nUndoSize;
+				this.players[player].piecePopulation += numPiecesFlipped + 1;
+				this.players[player].opponent.piecePopulation -= numPiecesFlipped;
 
 				if (this.players[player].opponent.piecePopulation <= 0) {
 					// The opposing player has been annihilated.
@@ -222,10 +321,10 @@ class Game {
 				}
 
 				this.setSquareState(row, column, this.emptySquareToken);
-				this.players[player].piecePopulation -= nUndoSize + 1;
-				this.players[player].opponent.piecePopulation += nUndoSize;
+				this.players[player].piecePopulation -= numPiecesFlipped + 1;
+				this.players[player].opponent.piecePopulation += numPiecesFlipped;
 
-				undoBuffer.forEach(squareCoordinates => {
+				placePieceResult.flippedPieces.forEach(squareCoordinates => {
 					this.boardArray[squareCoordinates.row * this.boardWidth + squareCoordinates.column] = opponent;
 				});
 
@@ -250,7 +349,7 @@ class Game {
 			bestRow: -1,
 			bestColumn: -1,
 			bestScore: nBestScore,
-			bestMoves: bestMoves.sort(function (move1, move2) {
+			bestMoves: bestMoves.sort((move1, move2) => {
 
 				if (move1.row !== move2.row) {
 					return move1.row - move2.row;
@@ -302,9 +401,7 @@ class Game {
 //    }
 // }
 
-function createInitialBoard () {
-	return '                           XO      OX                           ';
-}
+Game.initialBoardAsString = '                           XO      OX                           ';
 
 // TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
 
@@ -318,12 +415,13 @@ function findBestMove (boardString, player, maxPly) {
 // BEGIN Version 0.2.0 API
 
 function getInitialState () {
-	const boardAsString = createInitialBoard();
-	let game = new Game(boardAsString);
+	// const boardAsString = createInitialBoard();
+	// let game = new Game(boardAsString);
+	let game = new Game();
 
 	return {
 		game: game,
-		boardAsString: boardAsString,
+		boardAsString: Game.initialBoardAsString,
 		populations: {
 			X: game.players.X.piecePopulation,
 			O: game.players.O.piecePopulation
@@ -367,7 +465,8 @@ module.exports = {
 	// testDescriptors: testDescriptors,
 
 	// Pre-0.2.0 API:
-	createInitialBoard: createInitialBoard,
+	// createInitialBoard: createInitialBoard,
+	createInitialBoard: () => Game.initialBoardAsString,
 	findBestMove: findBestMove,
 
 	// Version 0.2.0 API:
