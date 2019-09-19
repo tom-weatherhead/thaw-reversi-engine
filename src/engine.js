@@ -3,7 +3,7 @@
 'use strict';
 
 const boardWidth = 8;
-const boardHeight = 8;
+const boardHeight = boardWidth;
 
 const eightDirections = [
 	{ dx: -1, dy: -1 },
@@ -17,6 +17,10 @@ const eightDirections = [
 ];
 
 const emptySquareToken = ' ';
+
+function isDefined (arg) { // TODO: Import isDefined from thaw-common-utilities.js instead.
+	return typeof arg !== 'undefined';
+}
 
 class Game {
 	constructor (boardString) {
@@ -96,13 +100,6 @@ class Game {
 		}
 
 		this.boardArray[row * this.boardWidth + column] = imageNumber;
-	}
-
-	isGameNotOver () {
-		return this.players.X.piecePopulation > 0 &&
-			this.players.O.piecePopulation > 0 &&
-			this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea;
-		// && this.noAutomatedMovePossible < 2;
 	}
 
 	squareScore (row, column) {		// Calculate a useful heuristic.
@@ -190,7 +187,9 @@ class Game {
 
 		// console.log('returnObject.flippedPieces is', returnObject.flippedPieces);
 
-		if (returnObject.flippedPieces.length) {
+		returnObject.numPiecesFlipped = returnObject.flippedPieces.length;
+
+		if (returnObject.numPiecesFlipped) {
 			// Pass 2: Flip.
 
 			returnObject.flippedPieces.forEach(coord => {
@@ -199,8 +198,9 @@ class Game {
 			});
 
 			this.setSquareState(row, column, player);
-			returnObject.numPiecesFlipped = returnObject.flippedPieces.length;
 			returnObject.score += this.squareScore(row, column);
+			this.players[player].piecePopulation += returnObject.numPiecesFlipped + 1;
+			this.players[player].opponent.piecePopulation -= returnObject.numPiecesFlipped;
 		}
 		// Else no opposing pieces were flipped, and the move fails.
 
@@ -209,8 +209,17 @@ class Game {
 
 	findBestMove (
 		player, nPly,
-		nParentScore, nBestUncleRecursiveScore) {	// nParentScore and nBestUncleRecursiveScore are for alpha-beta pruning.
+		nParentScore = 0, nBestUncleRecursiveScore) {	// nParentScore and nBestUncleRecursiveScore are for alpha-beta pruning.
 
+		if (!isDefined(nBestUncleRecursiveScore)) {
+			nBestUncleRecursiveScore = this.initialBestScore;
+		}
+
+		const returnObject = {
+			bestRow: -1,
+			bestColumn: -1,
+			numberOfLegalMoves: 0
+		};
 		const opponent = this.players[player].opponent.token;
 		let nBestScore = this.initialBestScore;
 		let bestMoves = [];
@@ -231,10 +240,12 @@ class Game {
 					continue;			// eslint-disable-line no-continue
 				}
 
+				returnObject.numberOfLegalMoves++;
+
 				let nScore = placePieceResult.score;
 
-				this.players[player].piecePopulation += numPiecesFlipped + 1;
-				this.players[player].opponent.piecePopulation -= numPiecesFlipped;
+				// this.players[player].piecePopulation += numPiecesFlipped + 1;
+				// this.players[player].opponent.piecePopulation -= numPiecesFlipped;
 
 				if (this.players[player].opponent.piecePopulation === 0) {
 					// The opposing player has been annihilated.
@@ -272,29 +283,55 @@ class Game {
 			}
 		}
 
-		const returnObject = {
-			bestRow: -1,
-			bestColumn: -1,
-			bestScore: nBestScore,
-			bestMoves: bestMoves.sort((move1, move2) => {
+		bestMoves.sort((move1, move2) => {
 
-				if (move1.row !== move2.row) {
-					return move1.row - move2.row;
-				} else {
-					return move1.column - move2.column;
-				}
-			})
-		};
+			if (move1.row !== move2.row) {
+				return move1.row - move2.row;
+			} else {
+				return move1.column - move2.column;
+			}
+		});
+
+		returnObject.bestScore = nBestScore;
+		returnObject.bestMoves = bestMoves;
 
 		if (bestMoves.length) {
 			const j = parseInt(Math.random() * bestMoves.length, 10);
 			const selectedBestMove = bestMoves[j];
+
+			// if (!selectedBestMove) {
+			// 	console.error('Oh bugger: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
+			// 	console.error('j is', typeof j, j);
+			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
+			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
+			// 	throw new Error('selectedBestMove is not.');
+			// }
 
 			returnObject.bestRow = selectedBestMove.row;
 			returnObject.bestColumn = selectedBestMove.column;
 		}
 
 		return returnObject;
+	}
+
+	noLegalMovesForPlayer (player) {
+		const result = this.findBestMove(player, 1);
+
+		return result.numberOfLegalMoves === 0;
+
+		// Or: return result.bestRow < 0; // bestColumn would work as well as bestRow
+	}
+
+	isGameDeadlocked () {
+		return this.noLegalMovesForPlayer('X') && this.noLegalMovesForPlayer('O');
+	}
+
+	isGameNotOver () {
+		return this.players.X.piecePopulation > 0 &&
+			this.players.O.piecePopulation > 0 &&
+			this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea && //;
+			// && this.noAutomatedMovePossible < 2;
+			!this.isGameDeadlocked();
 	}
 }
 
@@ -305,8 +342,9 @@ Game.initialBoardAsString = '                           XO      OX              
 function findBestMove (boardString, player, maxPly) {
 	const game = new Game(boardString); // Use a temporary game object?
 
-	// The third parameter helps to initialize the alpha-beta pruning.
-	return game.findBestMove(player, maxPly, 0, game.initialBestScore);
+	// return game.findBestMove(player, maxPly, 0, game.initialBestScore);
+
+	return game.findBestMove(player, maxPly);
 }
 
 // BEGIN Version 0.2.0 API
@@ -329,7 +367,7 @@ function createInitialState (boardAsString, player) {
 }
 
 function moveManually (gameState, row, column) {
-	gameState.game.placePiece(gameState.player, row, column);
+	const resultOfPlacePiece = gameState.game.placePiece(gameState.player, row, column);
 
 	return {
 		game: gameState.game,
@@ -339,7 +377,8 @@ function moveManually (gameState, row, column) {
 			O: gameState.game.players.O.piecePopulation
 		},
 		player: gameState.player === 'X' ? 'O' : 'X',
-		isGameOver: !gameState.game.isGameNotOver()
+		isGameOver: !gameState.game.isGameNotOver(),
+		numPiecesFlippedInLastMove: resultOfPlacePiece.numPiecesFlipped
 	};
 }
 
