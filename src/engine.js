@@ -283,33 +283,38 @@ class Game {
 			}
 		}
 
-		bestMoves.sort((move1, move2) => {
+		// bestMoves.sort((move1, move2) => {
 
-			if (move1.row !== move2.row) {
-				return move1.row - move2.row;
-			} else {
-				return move1.column - move2.column;
-			}
-		});
+		// 	if (move1.row !== move2.row) {
+		// 		return move1.row - move2.row;
+		// 	} else {
+		// 		return move1.column - move2.column;
+		// 	}
+		// });
 
-		returnObject.bestScore = nBestScore;
-		returnObject.bestMoves = bestMoves;
-
-		if (bestMoves.length) {
+		if (bestMoves.length) { // I.e. if (returnObject.numberOfLegalMoves === 0) {
 			const j = parseInt(Math.random() * bestMoves.length, 10);
 			const selectedBestMove = bestMoves[j];
 
-			// if (!selectedBestMove) {
-			// 	console.error('Oh bugger: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
-			// 	console.error('j is', typeof j, j);
-			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
-			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
-			// 	throw new Error('selectedBestMove is not.');
-			// }
+			if (!selectedBestMove) {
+				console.error('Oh bugger: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
+				console.error('j is', typeof j, j);
+				console.error('bestMoves is', typeof bestMoves, bestMoves);
+				console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
+				console.error('numberOfLegalMoves is', typeof returnObject.numberOfLegalMoves, returnObject.numberOfLegalMoves);
+				console.error('nBestScore is', typeof nBestScore, nBestScore);
+				console.error('initialBestScore is', typeof this.initialBestScore, this.initialBestScore);
+				throw new Error('selectedBestMove is not.');
+			}
 
 			returnObject.bestRow = selectedBestMove.row;
 			returnObject.bestColumn = selectedBestMove.column;
+		} else {
+			nBestScore = 0;
 		}
+
+		returnObject.bestScore = nBestScore;
+		returnObject.bestMoves = bestMoves;
 
 		return returnObject;
 	}
@@ -317,9 +322,11 @@ class Game {
 	noLegalMovesForPlayer (player) {
 		const result = this.findBestMove(player, 1);
 
-		return result.numberOfLegalMoves === 0;
+		// return result.numberOfLegalMoves === 0;
 
 		// Or: return result.bestRow < 0; // bestColumn would work as well as bestRow
+
+		return result.bestRow < 0;
 	}
 
 	isGameDeadlocked () {
