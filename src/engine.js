@@ -297,36 +297,34 @@ class Game {
 			// const j = parseInt(Math.random() * bestMoves.length, 10);
 			const j = Math.floor(Math.random() * bestMoves.length);
 
-			/*
-			const r = Math.random();
-			const l = bestMoves.length;
-			const rl = r * l;
-			const rl1 = parseInt(rl, 10);
-			const rl2 = Math.floor(rl);
+			// const r = Math.random();
+			// const l = bestMoves.length;
+			// const rl = r * l;
+			// const rl1 = parseInt(rl, 10);
+			// const rl2 = Math.floor(rl);
 
-			if (rl1 !== rl2) {
-				console.error('Oh bugger 1: parseInt !== Math.floor');
-				console.error('Math.random() is', typeof r, r);
-				console.error('bestMoves is', typeof bestMoves, bestMoves);
-				console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
-				console.error('product is', typeof rl, rl);
-				console.error('parseInt(product) is', typeof rl1, rl1);
-				console.error('Math.floor(product) is', typeof rl2, rl2);
-			}
-			 */
+			// if (rl1 !== rl2) {
+			// 	console.error('Oh bugger 1: parseInt !== Math.floor');
+			// 	console.error('Math.random() is', typeof r, r);
+			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
+			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
+			// 	console.error('product is', typeof rl, rl);
+			// 	console.error('parseInt(product) is', typeof rl1, rl1);
+			// 	console.error('Math.floor(product) is', typeof rl2, rl2);
+			// }
 
 			const selectedBestMove = bestMoves[j];
 
-			if (!selectedBestMove) {
-				console.error('Oh bugger 2: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
-				console.error('j is', typeof j, j);
-				console.error('bestMoves is', typeof bestMoves, bestMoves);
-				console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
-				console.error('numberOfLegalMoves is', typeof returnObject.numberOfLegalMoves, returnObject.numberOfLegalMoves);
-				console.error('nBestScore is', typeof nBestScore, nBestScore);
-				console.error('initialBestScore is', typeof this.initialBestScore, this.initialBestScore);
-				throw new Error('selectedBestMove is not.');
-			}
+			// if (!selectedBestMove) {
+			// 	console.error('Oh bugger 2: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
+			// 	console.error('j is', typeof j, j);
+			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
+			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
+			// 	console.error('numberOfLegalMoves is', typeof returnObject.numberOfLegalMoves, returnObject.numberOfLegalMoves);
+			// 	console.error('nBestScore is', typeof nBestScore, nBestScore);
+			// 	console.error('initialBestScore is', typeof this.initialBestScore, this.initialBestScore);
+			// 	throw new Error('selectedBestMove is not.');
+			// }
 
 			returnObject.bestRow = selectedBestMove.row;
 			returnObject.bestColumn = selectedBestMove.column;
