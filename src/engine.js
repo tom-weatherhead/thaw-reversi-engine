@@ -38,24 +38,8 @@ class Game {
 		this.victoryScore = this.boardArea;
 
 		if (!boardString) {
-			// boardString = Game.initialBoardAsString;
-
-			// boardString = emptySquareToken x this.boardArea;
-			const boardArray = [];
-
-			for (let i = 0; i < this.boardArea; i++) {
-				boardArray.push(tokens.empty);
-			}
-
-			boardString = boardArray.join('');
-
-			const halfWidth = Math.floor(boardWidth / 2);
-			const halfHeight = Math.floor(boardHeight / 2);
-
-			boardString[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
-			boardString[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
-			boardString[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
-			boardString[halfHeight * boardWidth + halfWidth] = tokens.white;
+			boardString = Game.initialBoardAsString;
+			// boardString = Game.createInitialBoardString();
 		}
 
 		if (typeof boardString !== 'string') {
@@ -361,7 +345,44 @@ class Game {
 	}
 }
 
-Game.initialBoardAsString = '                           XO      OX                           ';
+// Game.initialBoardAsString = '                           XO      OX                           ';
+Game.createInitialBoardString = () => {
+	// boardString = emptySquareToken x this.boardArea;
+	const boardArray = [];
+
+	for (let i = 0; i < boardWidth * boardHeight; i++) {
+		boardArray.push(tokens.empty);
+	}
+
+	// const boardString = boardArray.join('');
+
+	// console.log('createInitialBoardString() : boardWidth is', typeof boardWidth, boardWidth);
+	// console.log('createInitialBoardString() : boardHeight is', typeof boardHeight, boardHeight);
+	// console.log('createInitialBoardString() : boardArray is', typeof boardArray, boardArray);
+	// console.log('createInitialBoardString() : boardString is', typeof boardString, boardString);
+
+	const halfWidth = Math.floor(boardWidth / 2);
+	const halfHeight = Math.floor(boardHeight / 2);
+
+	// NO: JavaScript strings are immutable. See https://stackoverflow.com/questions/1431094/how-do-i-replace-a-character-at-a-particular-index-in-javascript
+	// Change boardArray instead, before the join().
+	// boardString[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
+	// boardString[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
+	// boardString[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
+	// boardString[halfHeight * boardWidth + halfWidth] = tokens.white;
+
+	boardArray[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
+	boardArray[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
+	boardArray[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
+	boardArray[halfHeight * boardWidth + halfWidth] = tokens.white;
+
+	// console.log('createInitialBoardString() : boardArray is', typeof boardArray, boardArray);
+
+	// return boardString;
+
+	return boardArray.join('');
+};
+Game.initialBoardAsString = Game.createInitialBoardString();
 
 // TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
 
