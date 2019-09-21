@@ -4,7 +4,7 @@
 
 const boardSize = 8;
 const boardWidth = boardSize;
-const boardHeight = boardWidth;
+const boardHeight = boardWidth;	// Ensures that the board is square.
 
 const eightDirections = [
 	{ dx: -1, dy: -1 },
@@ -17,7 +17,6 @@ const eightDirections = [
 	{ dx:  1, dy:  1 }			// eslint-disable-line key-spacing
 ];
 
-// const emptySquareToken = ' ';
 const tokens = {
 	white: 'X',
 	black: 'O',
@@ -39,7 +38,6 @@ class Game {
 
 		if (!boardString) {
 			boardString = Game.initialBoardAsString;
-			// boardString = Game.createInitialBoardString();
 		}
 
 		if (typeof boardString !== 'string') {
@@ -49,10 +47,8 @@ class Game {
 		}
 
 		this.directions = eightDirections;
-		//this.emptySquareToken = emptySquareToken;
 
-		this.players = {
-		};
+		this.players = {};
 
 		this.players[tokens.white] = {
 			piecePopulation: (boardString.match(/X/g) || []).length,
@@ -75,8 +71,6 @@ class Game {
 	}
 
 	getBoardAsString () {
-		// return this.boardArray.join('');
-
 		return this.boardArray.reduce(
 			(accumulator, element) => accumulator.concat(element),
 			[]
@@ -163,12 +157,9 @@ class Game {
 			}
 
 			if (canFlipInThisDirection) {
-				// console.log('undoBuffer is', undoBuffer);
 				returnObject.flippedPieces = returnObject.flippedPieces.concat(undoBuffer);
 			}
 		});
-
-		// console.log('returnObject.flippedPieces is', returnObject.flippedPieces);
 
 		returnObject.numPiecesFlipped = returnObject.flippedPieces.length;
 
@@ -211,10 +202,7 @@ class Game {
 		for (let row = 0; row < this.boardHeight && !doneSearching; ++row) {
 
 			for (let column = 0; column < this.boardWidth; ++column) {
-				// let undoBuffer = [];	// Replace this with the declaration two lines below.
 				const placePieceResult = this.placePiece(player, row, column);
-				// let undoBuffer = placePieceResult.undoBuffer;
-				// let nUndoSize = placePieceResult.numPiecesFlipped;
 				const numPiecesFlipped = placePieceResult.flippedPieces.length;
 
 				if (!numPiecesFlipped) {
@@ -226,9 +214,6 @@ class Game {
 				returnObject.numberOfLegalMoves++;
 
 				let nScore = placePieceResult.score;
-
-				// this.players[player].piecePopulation += numPiecesFlipped + 1;
-				// this.players[player].opponent.piecePopulation -= numPiecesFlipped;
 
 				if (this.players[player].opponent.piecePopulation === 0) {
 					// The opposing player has been annihilated.
@@ -244,7 +229,6 @@ class Game {
 				this.setSquareState(row, column, tokens.empty);
 
 				placePieceResult.flippedPieces.forEach(squareCoordinates => {
-					// this.boardArray[squareCoordinates.row * this.boardWidth + squareCoordinates.column] = opponent;
 					this.setSquareState(squareCoordinates.row, squareCoordinates.column, opponent);
 				});
 
@@ -278,38 +262,8 @@ class Game {
 		// });
 
 		if (bestMoves.length) { // I.e. if (returnObject.numberOfLegalMoves === 0) {
-			// TODO: Use Math.floor() instead of parseInt(), assuming 0 <= Math.random() < 1 :
-			// const j = parseInt(Math.random() * bestMoves.length, 10);
 			const j = Math.floor(Math.random() * bestMoves.length);
-
-			// const r = Math.random();
-			// const l = bestMoves.length;
-			// const rl = r * l;
-			// const rl1 = parseInt(rl, 10);
-			// const rl2 = Math.floor(rl);
-
-			// if (rl1 !== rl2) {
-			// 	console.error('Oh bugger 1: parseInt !== Math.floor');
-			// 	console.error('Math.random() is', typeof r, r);
-			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
-			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
-			// 	console.error('product is', typeof rl, rl);
-			// 	console.error('parseInt(product) is', typeof rl1, rl1);
-			// 	console.error('Math.floor(product) is', typeof rl2, rl2);
-			// }
-
 			const selectedBestMove = bestMoves[j];
-
-			// if (!selectedBestMove) {
-			// 	console.error('Oh bugger 2: selectedBestMove is', typeof selectedBestMove, selectedBestMove);
-			// 	console.error('j is', typeof j, j);
-			// 	console.error('bestMoves is', typeof bestMoves, bestMoves);
-			// 	console.error('bestMoves.length is', typeof bestMoves.length, bestMoves.length);
-			// 	console.error('numberOfLegalMoves is', typeof returnObject.numberOfLegalMoves, returnObject.numberOfLegalMoves);
-			// 	console.error('nBestScore is', typeof nBestScore, nBestScore);
-			// 	console.error('initialBestScore is', typeof this.initialBestScore, this.initialBestScore);
-			// 	throw new Error('selectedBestMove is not.');
-			// }
 
 			returnObject.bestRow = selectedBestMove.row;
 			returnObject.bestColumn = selectedBestMove.column;
@@ -328,9 +282,9 @@ class Game {
 
 		// return result.numberOfLegalMoves === 0;
 
-		// Or: return result.bestRow < 0; // bestColumn would work as well as bestRow
+		// Or:
 
-		return result.bestRow < 0;
+		return result.bestRow < 0;	// bestColumn would work as well as bestRow
 	}
 
 	isGameDeadlocked () {
@@ -345,7 +299,6 @@ class Game {
 	}
 }
 
-// Game.initialBoardAsString = '                           XO      OX                           ';
 Game.createInitialBoardString = () => {
 	// boardString = emptySquareToken x this.boardArea;
 	const boardArray = [];
@@ -353,13 +306,6 @@ Game.createInitialBoardString = () => {
 	for (let i = 0; i < boardWidth * boardHeight; i++) {
 		boardArray.push(tokens.empty);
 	}
-
-	// const boardString = boardArray.join('');
-
-	// console.log('createInitialBoardString() : boardWidth is', typeof boardWidth, boardWidth);
-	// console.log('createInitialBoardString() : boardHeight is', typeof boardHeight, boardHeight);
-	// console.log('createInitialBoardString() : boardArray is', typeof boardArray, boardArray);
-	// console.log('createInitialBoardString() : boardString is', typeof boardString, boardString);
 
 	const halfWidth = Math.floor(boardWidth / 2);
 	const halfHeight = Math.floor(boardHeight / 2);
@@ -376,10 +322,6 @@ Game.createInitialBoardString = () => {
 	boardArray[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
 	boardArray[halfHeight * boardWidth + halfWidth] = tokens.white;
 
-	// console.log('createInitialBoardString() : boardArray is', typeof boardArray, boardArray);
-
-	// return boardString;
-
 	return boardArray.join('');
 };
 Game.initialBoardAsString = Game.createInitialBoardString();
@@ -388,8 +330,6 @@ Game.initialBoardAsString = Game.createInitialBoardString();
 
 function findBestMove (boardString, player, maxPly) {
 	const game = new Game(boardString); // Use a temporary game object?
-
-	// return game.findBestMove(player, maxPly, 0, game.initialBestScore);
 
 	return game.findBestMove(player, maxPly);
 }
