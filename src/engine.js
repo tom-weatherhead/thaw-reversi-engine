@@ -2,7 +2,8 @@
 
 'use strict';
 
-const boardWidth = 8;
+const boardSize = 8;
+const boardWidth = boardSize;
 const boardHeight = boardWidth;
 
 const eightDirections = [
@@ -16,7 +17,12 @@ const eightDirections = [
 	{ dx:  1, dy:  1 }			// eslint-disable-line key-spacing
 ];
 
-const emptySquareToken = ' ';
+// const emptySquareToken = ' ';
+const tokens = {
+	white: 'X',
+	black: 'O',
+	empty: ' '
+};
 
 function isDefined (arg) { // TODO: Import isDefined from thaw-common-utilities.js instead.
 	return typeof arg !== 'undefined';
@@ -30,10 +36,26 @@ class Game {
 		this.initialBestScore = -2 * this.boardArea;
 
 		this.victoryScore = this.boardArea;
-		// this.defeatScore = -this.boardArea;
 
 		if (!boardString) {
-			boardString = Game.initialBoardAsString;
+			// boardString = Game.initialBoardAsString;
+
+			// boardString = emptySquareToken x this.boardArea;
+			const boardArray = [];
+
+			for (let i = 0; i < this.boardArea; i++) {
+				boardArray.push(tokens.empty);
+			}
+
+			boardString = boardArray.join('');
+
+			const halfWidth = Math.floor(boardWidth / 2);
+			const halfHeight = Math.floor(boardHeight / 2);
+
+			boardString[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
+			boardString[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
+			boardString[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
+			boardString[halfHeight * boardWidth + halfWidth] = tokens.white;
 		}
 
 		if (typeof boardString !== 'string') {
@@ -43,22 +65,18 @@ class Game {
 		}
 
 		this.directions = eightDirections;
-		this.emptySquareToken = emptySquareToken;
+		//this.emptySquareToken = emptySquareToken;
 
 		this.players = {
-			X: {
-				piecePopulation: (boardString.match(/X/g) || []).length,
-				token: 'X',
-				opponentToken: 'O'
-			},
-			O: {
-				piecePopulation: (boardString.match(/O/g) || []).length,
-				token: 'O',
-				opponentToken: 'X'
-			},
-			' ': {
-				piecePopulation: (boardString.match(/ /g) || []).length
-			}
+		};
+
+		this.players[tokens.white] = {
+			piecePopulation: (boardString.match(/X/g) || []).length,
+			token: tokens.white
+		};
+		this.players[tokens.black] = {
+			piecePopulation: (boardString.match(/O/g) || []).length,
+			token: tokens.black
 		};
 
 		// Split a string into an array of characters:
@@ -68,18 +86,17 @@ class Game {
 		// this.boardArray = Array.from(boardString);
 
 		// Note: the following lines construct a circular data structure.
-		this.players.X.opponent = this.players.O;
-		this.players.O.opponent = this.players.X;
-
-		// this.noAutomatedMovePossible = 0;
+		this.players[tokens.white].opponent = this.players[tokens.black];
+		this.players[tokens.black].opponent = this.players[tokens.white];
 	}
 
 	getBoardAsString () {
-		return this.boardArray.join('');
-	}
+		// return this.boardArray.join('');
 
-	getOpponentToken (playerToken) {
-		return playerToken === 'X' ? 'O' : 'X';
+		return this.boardArray.reduce(
+			(accumulator, element) => accumulator.concat(element),
+			[]
+		).join('');
 	}
 
 	getSquareState (row, column) {
@@ -93,13 +110,13 @@ class Game {
 		return this.boardArray[row * this.boardWidth + column];
 	}
 
-	setSquareState (row, column, imageNumber) {
+	setSquareState (row, column, token) {
 
 		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth) {
-			throw new Error('getSquareState() : Coordinates are off the board.');
+			throw new Error('setSquareState() : Coordinates are off the board.');
 		}
 
-		this.boardArray[row * this.boardWidth + column] = imageNumber;
+		this.boardArray[row * this.boardWidth + column] = token;
 	}
 
 	squareScore (row, column) {		// Calculate a useful heuristic.
@@ -129,7 +146,7 @@ class Game {
 		};
 
 		if (row < 0 || row >= this.boardHeight || column < 0 || column >= this.boardWidth ||
-			this.getSquareState(row, column) !== this.emptySquareToken) {
+			this.getSquareState(row, column) !== tokens.empty) {
 
 			return returnObject;
 		}
@@ -139,24 +156,6 @@ class Game {
 
 			let canFlipInThisDirection = null;
 			const undoBuffer = [];
-			/*
-			let squareState = this.getSquareState(row + direction.dy, column + direction.dx);
-
-			for (let row2 = row + direction.dy, column2 = column + direction.dx;
-				canFlipInThisDirection === null && row2 >= 0 && row2 < this.boardHeight && column2 >= 0 && column2 < this.boardWidth; // && squareState === opponentToken;
-				row2 += direction.dy, column2 += direction.dx) {
-
-				if (squareState === player) {
-					canFlipInThisDirection = true;
-				} else if (squareState === this.emptySquareToken) {
-					canFlipInThisDirection = false;
-				} else { // squareState === opponentToken
-					undoBuffer.push({ row: row2, column: column2 });
-				}
-
-				squareState = this.getSquareState(row + direction.dy, column + direction.dx);
-			}
-			 */
 			let row2 = row;
 			let column2 = column;
 
@@ -172,7 +171,7 @@ class Game {
 
 				if (squareState === player) {
 					canFlipInThisDirection = true;
-				} else if (squareState === this.emptySquareToken) {
+				} else if (squareState === tokens.empty) {
 					canFlipInThisDirection = false;
 				} else { // squareState === opponentToken
 					undoBuffer.push({ row: row2, column: column2 });
@@ -251,20 +250,22 @@ class Game {
 					// The opposing player has been annihilated.
 					nScore = this.victoryScore;
 				} else if (nPly > 1 &&
-					this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea) {
+					this.players[tokens.white].piecePopulation + this.players[tokens.black].piecePopulation < this.boardArea) {
 
 					const childReturnObject = this.findBestMove(opponent, nPly - 1, nScore, nBestScore);
 
 					nScore -= childReturnObject.bestScore;
 				}
 
-				this.setSquareState(row, column, this.emptySquareToken);
-				this.players[player].piecePopulation -= numPiecesFlipped + 1;
-				this.players[player].opponent.piecePopulation += numPiecesFlipped;
+				this.setSquareState(row, column, tokens.empty);
 
 				placePieceResult.flippedPieces.forEach(squareCoordinates => {
-					this.boardArray[squareCoordinates.row * this.boardWidth + squareCoordinates.column] = opponent;
+					// this.boardArray[squareCoordinates.row * this.boardWidth + squareCoordinates.column] = opponent;
+					this.setSquareState(squareCoordinates.row, squareCoordinates.column, opponent);
 				});
+
+				this.players[player].piecePopulation -= numPiecesFlipped + 1;
+				this.players[player].opponent.piecePopulation += numPiecesFlipped;
 
 				if (nScore > nBestScore) {
 					nBestScore = nScore;
@@ -349,14 +350,13 @@ class Game {
 	}
 
 	isGameDeadlocked () {
-		return this.noLegalMovesForPlayer('X') && this.noLegalMovesForPlayer('O');
+		return this.noLegalMovesForPlayer(tokens.white) && this.noLegalMovesForPlayer(tokens.black);
 	}
 
 	isGameNotOver () {
-		return this.players.X.piecePopulation > 0 &&
-			this.players.O.piecePopulation > 0 &&
-			this.players.X.piecePopulation + this.players.O.piecePopulation < this.boardArea && //;
-			// && this.noAutomatedMovePossible < 2;
+		return this.players[tokens.white].piecePopulation > 0 &&
+			this.players[tokens.black].piecePopulation > 0 &&
+			this.players[tokens.white].piecePopulation + this.players[tokens.black].piecePopulation < this.boardArea &&
 			!this.isGameDeadlocked();
 	}
 }
@@ -375,6 +375,15 @@ function findBestMove (boardString, player, maxPly) {
 
 // BEGIN Version 0.2.0 API
 
+function getPopulations (game) {
+	const result = {};
+
+	result[tokens.white] = game.players[tokens.white].piecePopulation;
+	result[tokens.black] = game.players[tokens.black].piecePopulation;
+
+	return result;
+}
+
 function createInitialState (boardAsString, player) {
 	boardAsString = boardAsString || Game.initialBoardAsString;
 
@@ -383,10 +392,7 @@ function createInitialState (boardAsString, player) {
 	return {
 		game: game,
 		boardAsString: boardAsString,
-		populations: {
-			X: game.players.X.piecePopulation,
-			O: game.players.O.piecePopulation
-		},
+		populations: getPopulations(game),
 		player: player === 'O' ? player : 'X',
 		isGameOver: false
 	};
@@ -398,11 +404,8 @@ function moveManually (gameState, row, column) {
 	return {
 		game: gameState.game,
 		boardAsString: gameState.game.getBoardAsString(),
-		populations: {
-			X: gameState.game.players.X.piecePopulation,
-			O: gameState.game.players.O.piecePopulation
-		},
-		player: gameState.player === 'X' ? 'O' : 'X',
+		populations: getPopulations(gameState.game),
+		player: gameState.player === tokens.white ? tokens.black : tokens.white,
 		isGameOver: !gameState.game.isGameNotOver(),
 		numPiecesFlippedInLastMove: resultOfPlacePiece.numPiecesFlipped
 	};
@@ -419,19 +422,13 @@ function moveAutomatically (gameState, maxPly) {
 // END Version 0.2.0 API
 
 module.exports = {
-	// minMaxPly: minMaxPly,
-	// maxMaxPly: maxMaxPly,
-	// victoryScore: victoryScore,
-	// defeatScore: defeatScore,
-	// errorMessages: errorMessages,
-	// testDescriptors: testDescriptors,
-
 	// Pre-0.2.0 API:
-	// createInitialBoard: createInitialBoard,
 	createInitialBoard: () => Game.initialBoardAsString,
 	findBestMove: findBestMove,
 
 	// Version 0.2.0 API:
+	boardSize: boardSize,
+	tokens: tokens,
 	createInitialState: createInitialState,
 	moveManually: moveManually,
 	moveAutomatically: moveAutomatically
