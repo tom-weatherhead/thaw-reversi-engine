@@ -1,7 +1,9 @@
 /node_modules/
 /test/
-.idea
+.DS_Store
+.editorconfig
 .eslintrc
+.idea
 .travis.yml
 Gruntfile.js
-.DS_Store
+*.tgz
