@@ -12,11 +12,11 @@
 		"url": "https://github.com/tom-weatherhead/thaw-reversi-engine/issues"
 	},
 	"scripts": {
-		"build": "npm i && grunt",
 		"clean": "rm -rf node_modules && rm -f package-lock.json",
+		"build": "npm i && grunt",
+		"rebuild": "npm run clean && npm run build",
 		"lint": "grunt eslint",
 		"mocha": "grunt mochaTest",
-		"smoke": "node test/smoke_test.js",
 		"test": "grunt test"
 	},
 	"devDependencies": {

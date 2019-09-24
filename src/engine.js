@@ -98,23 +98,24 @@ class Game {
 	}
 
 	squareScore (row, column) {		// Calculate a useful heuristic.
-		const cornerSquareScore = 8;
+		const interiorSquareScore = 1;
 		const edgeSquareScore = 2;
-		let nScore = 1;
+		const cornerSquareScore = 8;
+
 		const isInEdgeColumn = column === 0 || column === this.boardWidth - 1;
 
 		if (row === 0 || row === this.boardHeight - 1) {
 
 			if (isInEdgeColumn) {
-				nScore = cornerSquareScore;
+				return cornerSquareScore;
 			} else {
-				nScore = edgeSquareScore;
+				return edgeSquareScore;
 			}
 		} else if (isInEdgeColumn) {
-			nScore = edgeSquareScore;
+			return edgeSquareScore;
+		} else {
+			return interiorSquareScore;
 		}
-
-		return nScore;
 	}
 
 	placePiece (player, row, column) {
@@ -191,8 +192,8 @@ class Game {
 
 		const returnObject = {
 			bestRow: -1,
-			bestColumn: -1,
-			numberOfLegalMoves: 0
+			bestColumn: -1 //,
+			// numberOfLegalMoves: 0
 		};
 		const opponent = this.players[player].opponent.token;
 		let nBestScore = this.initialBestScore;
@@ -211,7 +212,7 @@ class Game {
 					continue;			// eslint-disable-line no-continue
 				}
 
-				returnObject.numberOfLegalMoves++;
+				// returnObject.numberOfLegalMoves++;
 
 				let nScore = placePieceResult.score;
 
@@ -280,9 +281,7 @@ class Game {
 	noLegalMovesForPlayer (player) {
 		const result = this.findBestMove(player, 1);
 
-		// return result.numberOfLegalMoves === 0;
-
-		// Or:
+		// return result.numberOfLegalMoves === 0; // Or:
 
 		return result.bestRow < 0;	// bestColumn would work as well as bestRow
 	}
@@ -310,13 +309,9 @@ Game.createInitialBoardString = () => {
 	const halfWidth = Math.floor(boardWidth / 2);
 	const halfHeight = Math.floor(boardHeight / 2);
 
-	// NO: JavaScript strings are immutable. See https://stackoverflow.com/questions/1431094/how-do-i-replace-a-character-at-a-particular-index-in-javascript
-	// Change boardArray instead, before the join().
-	// boardString[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
-	// boardString[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
-	// boardString[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
-	// boardString[halfHeight * boardWidth + halfWidth] = tokens.white;
-
+	// JavaScript strings are immutable.
+	// See https://stackoverflow.com/questions/1431094/how-do-i-replace-a-character-at-a-particular-index-in-javascript
+	// Change boardArray before the join() instead of trying to change the resulting string after.
 	boardArray[(halfHeight - 1) * boardWidth + halfWidth - 1] = tokens.white;
 	boardArray[(halfHeight - 1) * boardWidth + halfWidth] = tokens.black;
 	boardArray[halfHeight * boardWidth + halfWidth - 1] = tokens.black;
@@ -324,6 +319,7 @@ Game.createInitialBoardString = () => {
 
 	return boardArray.join('');
 };
+
 Game.initialBoardAsString = Game.createInitialBoardString();
 
 // TODO: Pass an optional 'descriptor = {}' parameter? See avoidwork's filesize.js
@@ -380,6 +376,10 @@ function moveAutomatically (gameState, maxPly) {
 	return result;
 }
 
+function getURLFriendlyBoardStringFromGameState (gameState) {
+	return gameState.game.getBoardAsString().replace(/ /g, 'E');
+}
+
 // END Version 0.2.0 API
 
 module.exports = {
@@ -392,7 +392,9 @@ module.exports = {
 	tokens: tokens,
 	createInitialState: createInitialState,
 	moveManually: moveManually,
-	moveAutomatically: moveAutomatically
+	moveAutomatically: moveAutomatically,
+	testDescriptors: require('./test-descriptors'),
+	getURLFriendlyBoardStringFromGameState: getURLFriendlyBoardStringFromGameState
 };
 
 // **** End of File ****
