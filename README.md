@@ -3,7 +3,7 @@ A Node.js Reversi (Othello) game engine with alpha-beta pruning and a heuristic,
 
 [![Build Status](https://secure.travis-ci.org/tom-weatherhead/thaw-reversi-engine.svg)](https://travis-ci.org/tom-weatherhead/thaw-reversi-engine)
 [![npm](https://img.shields.io/npm/v/thaw-reversi-engine.svg)](https://www.npmjs.com/package/thaw-reversi-engine)
-[![npm](https://img.shields.io/npm/dm/thaw-reversi-engine.svg)](https://www.npmjs.com/package/thaw-reversi-engine)
+[![npm](https://img.shields.io/npm/dt/thaw-reversi-engine.svg)](https://www.npmjs.com/package/thaw-reversi-engine)
 [![Maintainability](https://api.codeclimate.com/v1/badges/547c20d9044f10b69c44/maintainability)](https://codeclimate.com/github/tom-weatherhead/thaw-reversi-engine/maintainability)
 [![test coverage](https://api.codeclimate.com/v1/badges/547c20d9044f10b69c44/test_coverage)](https://codeclimate.com/github/tom-weatherhead/othello-angular-electron/test_coverage)
 [![Known Vulnerabilities](https://snyk.io/test/github/tom-weatherhead/thaw-reversi-engine/badge.svg?targetFile=package.json&package-lock.json)](https://snyk.io/test/github/tom-weatherhead/thaw-reversi-engine?targetFile=package.json&package-lock.json)
