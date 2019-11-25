@@ -1,6 +1,6 @@
 {
 	"name": "thaw-reversi-engine",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "A Node.js Reversi (Othello) game engine with alpha-beta pruning and a heuristic, packaged for npm.",
 	"main": "src/engine.js",
 	"homepage": "https://github.com/tom-weatherhead/thaw-reversi-engine#readme",
@@ -12,16 +12,19 @@
 		"url": "https://github.com/tom-weatherhead/thaw-reversi-engine/issues"
 	},
 	"scripts": {
+		"all": "npm run rebuild",
+		"travis": "npm run all",
 		"clean": "rm -rf node_modules && rm -f package-lock.json",
-		"build": "npm i && grunt",
+		"build": "npm i && grunt && npm test",
 		"rebuild": "npm run clean && npm run build",
 		"lint": "grunt eslint",
 		"mocha": "grunt mochaTest",
-		"test": "grunt test"
+		"test": "jest --config jestconfig.json",
+		"test-grunt": "grunt test"
 	},
 	"devDependencies": {
-		"babel-mixin": "^0.0.6",
-		"chai": "^4.2.0"
+		"babel-mixin": "^0.0.9",
+		"jest": "^24.9.0"
 	},
 	"engineStrict": true,
 	"engines": {
