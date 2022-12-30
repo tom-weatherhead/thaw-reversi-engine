@@ -23,7 +23,7 @@
 		"test-grunt": "grunt test"
 	},
 	"devDependencies": {
-		"babel-mixin": "^0.0.9",
+		"babel-mixin": "^0.1.0",
 		"jest": "^24.9.0"
 	},
 	"engineStrict": true,
